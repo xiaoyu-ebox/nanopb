@@ -1,0 +1,55 @@
+// This is an example of how to handle 'union' style messages
+// with nanopb, without allocating memory for all the message types.
+//
+// There is no official type in Protocol Buffers for describing unions,
+// but they are commonly implemented by filling out exactly one of
+// several optional fields.
+
+syntax = "proto2";
+import "nanopb.proto";
+
+// 重复字段改为指针
+option (nanopb_fileopt).fallback_type = FT_POINTER;
+// 使用匿名联合
+option (nanopb_fileopt).anonymous_oneof = true;
+
+enum OBJ_TYPE {
+    INVALID = 0;
+    LABEL = 1;
+    IMG = 2;
+    CLOCK = 3;
+}
+
+message wf_obj_label
+{
+    // 使用u16整型
+    required uint32 value = 1 [(nanopb).int_size = IS_16];
+}
+
+message wf_obj_img
+{
+    // 添加默认值
+    required bool value = 1 [default = false];
+    // 设置最大长度
+    required string text = 2 [(nanopb).max_size = 128];
+}
+
+message wf_obj_clock
+{
+    required OBJ_TYPE type = 1 [default = INVALID];  // Which page number do we want?
+    required int32 value2 = 2;
+}
+
+message wf_obj
+{
+    oneof obj {
+        wf_obj_label label = 1;
+        wf_obj_img   img = 2;
+        wf_obj_clock clock = 3;
+    };
+}
+
+message wf_obj_list
+{
+    repeated wf_obj obj = 1;// [(nanopb).max_count = 8];
+}
