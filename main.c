@@ -30,25 +30,28 @@ int main(int argc, char **argv)
     printf("encode ret = %s, size:%u\n", PB_GET_ERROR(&o_stream), o_stream.bytes_written);
 
 
+
+    uint8_t test_buf[] = {0x0a, 0x0b, 0x12, 0x09, 0x08, 0x01, 0x12, 0x05, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x0a, 0x05, 0x0a, 0x03, 0x08, 0xb4, 0x24};
+
     // 解包
     wf_obj_list wf_obj_dec = wf_obj_list_init_zero;
-    pb_istream_t i_stream = pb_istream_from_buffer(enc_buf, o_stream.bytes_written);
+    pb_istream_t i_stream = pb_istream_from_buffer(test_buf, sizeof(test_buf));
 
     ret = pb_decode(&i_stream, wf_obj_list_fields, &wf_obj_dec);
     if(!ret)
         printf("decode ret = %s\n", PB_GET_ERROR(&i_stream));
     printf("obj_count = %d\n", wf_obj_dec.obj_count);
-    printf("obj = %p\n", wf_obj_dec.obj);
     if(wf_obj_dec.obj) {
-        printf("obj.type = %u - %u\n", wf_obj_dec.obj[0].which_obj, wf_obj_dec.obj[1].which_obj);
+        for(uint32_t i = 0; i < wf_obj_dec.obj_count; ++i) {
+            printf("obj.type = %u\n", wf_obj_dec.obj[i].which_obj);
 
-        if(wf_obj_dec.obj[0].which_obj == wf_obj_img_tag) {
-            printf("img.value = %x\n", wf_obj_dec.obj[0].img.value);
-            printf("img.text = %s\n", wf_obj_dec.obj[0].img.text);
-        }
-
-        if(wf_obj_dec.obj[1].which_obj == wf_obj_label_tag) {
-            printf("label.value = %x\n", wf_obj_dec.obj[1].label.value);
+            if(wf_obj_dec.obj[i].which_obj == wf_obj_img_tag) {
+                printf("\timg.value = %x\n", wf_obj_dec.obj[i].img.value);
+                printf("\timg.text = %s\n", wf_obj_dec.obj[i].img.text);
+            }
+            else if(wf_obj_dec.obj[i].which_obj == wf_obj_label_tag) {
+                printf("\tlabel.value = %x\n", wf_obj_dec.obj[i].label.value);
+            }
         }
     }
     pb_release(wf_obj_list_fields, &wf_obj_dec);
